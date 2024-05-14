@@ -30,9 +30,6 @@ RUN chmod 0644 /etc/cron.d/harvest-cron
 RUN crontab /etc/cron.d/harvest-cron
 RUN touch /var/log/cron.log
 
-# Increase inotify watches limit
-RUN echo "fs.inotify.max_user_watches=524288" >> /etc/sysctl.conf && sysctl -p
-
 # Clear npm cache
 RUN npm cache clean --force
 
@@ -43,7 +40,7 @@ RUN rm -rf /app/node_modules
 RUN cd /app && npm install
 
 # Change the user
-USER pptruser
+#USER pptruser
 
 # Set up a screen and start the cron jobs in parallel
 CMD ["sh", "-c", "Xvfb :99 -screen 0 1024x768x16 & cron -f"]

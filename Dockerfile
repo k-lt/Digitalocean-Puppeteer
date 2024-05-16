@@ -16,6 +16,11 @@ RUN apt-get update \
 # Create user to run the app
 RUN groupadd -r pptruser && useradd -rm -g pptruser -G audio,video pptruser
 
+# Give user permissions
+RUN touch /var/log/cron.log \
+    && chown pptruser:pptruser /var/log/cron.log /var/run \
+    && chmod u+s /usr/sbin/cron
+
 # Set the working directory
 WORKDIR /app
 COPY . /app
@@ -25,7 +30,15 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV DBUS_SESSION_BUS_ADDRESS=autolaunch:
 
 # Create a cron job that changes to the app directory before running the npm command
-RUN echo "5 * * * * cd /app && npm run harvest-auctions >> /var/log/cron.log 2>&1" > /etc/cron.d/harvest-cron
+# 
+#
+#
+#
+
+RUN echo "3 * * * * cd /app && npm run harvest >> /var/log/cron.log 2>&1 \
+      && 17 * * * * cd /app && npm run harvest >> /var/log/cron.log 2>&1 \
+      && 29 * * * * cd /app && npm run harvest >> /var/log/cron.log 2>&1 \ 
+      && 41 * * * * cd /app && npm run harvest >> /var/log/cron.log 2>&1" > /etc/cron.d/harvest-cron
 RUN chmod 0644 /etc/cron.d/harvest-cron
 RUN crontab /etc/cron.d/harvest-cron
 RUN touch /var/log/cron.log
@@ -40,7 +53,7 @@ RUN rm -rf /app/node_modules
 RUN cd /app && npm install
 
 # Change the user
-#USER pptruser
+USER pptruser
 
 # Set up a screen and start the cron jobs in parallel
 CMD ["sh", "-c", "Xvfb :99 -screen 0 1024x768x16 & cron -f"]
